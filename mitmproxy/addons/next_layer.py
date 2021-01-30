@@ -34,6 +34,7 @@ class NextLayer:
                 re.compile(x, re.IGNORECASE) for x in ctx.options.tcp_hosts
             ]
         if "allow_hosts" in updated or "ignore_hosts" in updated:
+            print("ALLOW HOSTS in config:", ctx.options.allow_hosts)
             if ctx.options.allow_hosts and ctx.options.ignore_hosts:
                 raise exceptions.OptionsError("The allow_hosts and ignore_hosts options are mutually exclusive.")
             self.ignore_hosts = [
@@ -42,6 +43,7 @@ class NextLayer:
             self.allow_hosts = [
                 re.compile(x, re.IGNORECASE) for x in ctx.options.allow_hosts
             ]
+            print("self.allow_hosts:", self.allow_hosts)
 
     def ignore_connection(self, server_address: Optional[context.Address], data_client: bytes) -> Optional[bool]:
         """
@@ -71,18 +73,25 @@ class NextLayer:
         if not hostnames:
             return False
 
+        print("hostnames to check:", hostnames)
+        print("ignore hosts options:", ctx.options.ignore_hosts)
+        print("allow hosts options:", ctx.options.allow_hosts)
         if ctx.options.ignore_hosts:
-            return any(
+            res = any(
                 re.search(rex, host, re.IGNORECASE)
                 for host in hostnames
                 for rex in ctx.options.ignore_hosts
             )
+            print("ignore hosts result (True means ignore):", res)
+            return res 
         elif ctx.options.allow_hosts:
-            return not any(
+            res = not any(
                 re.search(rex, host, re.IGNORECASE)
                 for host in hostnames
                 for rex in ctx.options.allow_hosts
             )
+            print("allow hosts result (True means ignore):", res)
+            return res
         else:  # pragma: no cover
             raise AssertionError()
 
